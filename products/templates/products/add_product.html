@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Добавление товара</title>
+</head>
+<body>
+    <h1>Добавление товара</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Добавить</button>
+    </form>
+
+    <a href="{% url 'products:product_list' %}">Назад к списку товаров</a>
+</body>
+</html>

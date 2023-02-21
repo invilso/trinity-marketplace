@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Список товаров | TGTA Marketplace</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" integrity="sha384-OaJzSjv7wk+OJ8XV7Olyjnjh4dVJa/+ZGnc1LpC/ytCxzK7V50PNOHdQP7Vh1Kj2" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-jxzt0s3cKlCUYezxlT62mXgF2Q0ktcdRLqcJrQ0ff0D/8NU/PhwhJJDpky0nKj9X0eYYnwNvquzD29SvpWyS5w==" crossorigin="anonymous" />
+    <style>
+        body.light {
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+          
+        body.dark {
+            background-color: #343a40;
+            color: #f8f9fa;
+        }
+        .light .card {
+            background-color: #fff;
+            border-color: #ddd;
+            color: #333;
+          }
+          
+          .dark .card {
+            background-color: #222;
+            border-color: #444;
+            color: #fff;
+          }
+    </style>  
+</head>
+<body class='light mx-3 my-3'>
+    {% comment %} <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+          <a class="navbar-brand" href="#">Dark Mode Switch</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="darkSwitch" />
+                  <label class="custom-control-label" for="darkSwitch">Dark Mode</label>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav> {% endcomment %}
+    <form class="mb-1" method="get" action="{% url 'products:product_list' %}">
+        <div class="row">
+          <div class="col-sm-2">
+            <label for="server" class="form-label">Сервер:</label>
+            <select name="server" id="server" class="form-select">
+              <option value="">All</option>
+              <option value="RP1" {% if filters.server == 'RP1' %}selected{% endif %}>RP1</option>
+              <option value="RP2" {% if filters.server == 'RP2' %}selected{% endif %}>RP2</option>
+              <option value="RPG" {% if filters.server == 'RPG' %}selected{% endif %}>RPG</option>
+            </select>
+          </div>
+          <div class="col-sm-4">
+            <label for="name_or_description" class="form-label">Поиск:</label>
+            <input type="text" name="name_or_description" id="name_or_description" value="{{ filters.name_or_description }}" class="form-control">
+          </div>
+          <div class="col-sm-2">
+            <label for="min_price" class="form-label">Мин. цена:</label>
+            <input type="number" name="min_price" id="min_price" value="{{ filters.min_price }}" class="form-control">
+          </div>
+          <div class="col-sm-2">
+            <label for="max_price" class="form-label">Макс. цена:</label>
+            <input type="number" name="max_price" id="max_price" value="{{ filters.max_price }}" class="form-control">
+          </div>
+          <div class="col-sm-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">Фильтровать</button>
+            <a href="{% url 'products:add_product' %}" class="btn btn-primary mx-3">
+                <i class="bi bi-plus"></i> Добавить товар
+            </a> 
+          </div>
+        </div>
+      </form>
+    
+    
+    <h2 class="mt-3">Список товаров</h2>
+      
+    
+    <div class="row">
+        {% for product in products %}
+          <div class="col-md-2 mb-2" style="margin-left: 2%">
+            <div class="card mx-3 my-3" style="width: 300px; height: 650px">
+              <img src="{{ product.photo.url }}" class="card-img-top img-fluid mx-1 my-1" style="width: 97%; height: 30%;" alt="{{ product.name }}">
+              <div class="card-body">
+                <h5 class="card-title"><b>{{ product.name }}</b></h5>
+                <p class="card-text">{{ product.description }}</p>
+                <p class="card-text"><b>Цена:</b> {{ product.price }}</p>
+                <p class="card-text"><b>Продавец:</b> {{ product.nickname }}</p>
+                <p class="card-text"><b>Сервер:</b> {{ product.server }}</p>
+                <p class="card-text"><b>Дата создания:</b> {{ product.created_at|date:"d.m.y" }} {{ product.created_at|time:"H:i:s" }} UTC</p>
+                {% if ip == admin_ip %}
+                <p class="card-text"><b>IP:</b> {{ product.ip_address }}</p>
+                {% endif %}
+                {% if product.ip_address == ip %}
+                  <form method="POST" action="{% url 'products:delete_product' product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                  </form>
+                {% endif %}
+                {% if ip == admin_ip %}
+                  <form class="mt-2" method="POST" action="{% url 'products:block_product' product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Забанить и удалить всё</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+    </div>      
+    
+    
+
+
+    {% comment %} {% if products.has_other_pages %}
+    <div class="pagination">
+        <span class="step-links">
+            {% if products.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ products.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current-page">
+                Page {{ products.number }} of {{ products.paginator.num_pages }}.
+            </span>
+
+            {% if products.has_next %}
+                <a href="?page={{ products.next_page_number }}">next</a>
+                <a href="?page={{ products.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    {% endif %} {% endcomment %}
+    {% if products.has_other_pages %}
+  <nav aria-label="Products pagination">
+    <ul class="pagination justify-content-center">
+      {% if products.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page=1" aria-label="First">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
+            <span aria-hidden="true">&lsaquo;</span>
+          </a>
+        </li>
+      {% endif %}
+
+      <li class="page-item active" aria-current="page">
+        <span class="page-link">
+          Page {{ products.number }} of {{ products.paginator.num_pages }}
+        </span>
+      </li>
+
+      {% if products.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
+            <span aria-hidden="true">&rsaquo;</span>
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ products.paginator.num_pages }}" aria-label="Last">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+    
+    <div class="form-check form-switch">
+        
+        <input class="form-check-input" type="checkbox" id="darkSwitch">
+        <label class="form-check-label" for="darkSwitch">Темная тема</label>
+    </div>
+    <div>
+      <a href="{% url 'products:rules' %}" class="btn btn-primary">
+        <i class="fab fa-telegram-plane"></i> Правила сайта
+      </a>
+      <a href="https://t.me/TrinityGTAMarketplaceBot" class="btn btn-primary">
+        <i class="fab fa-telegram-plane"></i> Связаться с ботом
+      </a>
+      <a href="https://t.me/invilso" class="btn btn-primary">
+        <i class="fab fa-telegram-plane"></i> Написать разработчику
+      </a>
+      <a href="https://github.com/invilso/trinity-marketplace" class="btn btn-primary">
+        <i class="fab fa-telegram-plane"></i> GitHub проекта
+      </a>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-9sCo34JHmAdxkcwvFm3G8JzQfC/o98LgQn0+T9fqUQOR6N97O6UvN6UgUB6MJ0F3O3JPsMVzUR18WY/8L5q5gw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js" integrity="sha512-PrtZew+kaArEJzKn83pXOLtJc7NVmIw2/L2apV8ExjkzwuFTmD87ZzSLMhYXXcz9q/5q+fF/3C54lO5lSdQH0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        const darkSwitch = document.getElementById('darkSwitch');
+        const body = document.body;
+      
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+          darkSwitch.checked = true;
+          body.classList.add('dark');
+          document.querySelectorAll('input, select, button, .btn').forEach((el) => {
+            el.classList.add('dark');
+          });
+        }
+      
+        darkSwitch.addEventListener('change', () => {
+          if (darkSwitch.checked) {
+            body.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            document.querySelectorAll('input, select, button, .btn').forEach((el) => {
+              el.classList.add('dark');
+            });
+          } else {
+            body.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            document.querySelectorAll('input, select, button, .btn').forEach((el) => {
+              el.classList.remove('dark');
+            });
+          }
+        });
+      </script>
+      
+    
+</body>
+</html>    
